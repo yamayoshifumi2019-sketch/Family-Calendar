@@ -55,6 +55,7 @@ body {
     width: 100vw;
     padding: 8px;
     gap: 8px;
+    overflow: hidden;
 }
 
 /* ===================
@@ -584,9 +585,35 @@ body {
    Responsive Design
    =================== */
 @media (max-width: 768px) {
+    html, body {
+        overflow: auto;
+    }
+
+    .app-container {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
     .app-header {
         flex-direction: column;
         text-align: center;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .app-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .legend {
+        padding: 6px 10px;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .calendar-nav {
+        padding: 8px 12px;
     }
 
     .calendar-day {
@@ -599,6 +626,7 @@ body {
 
     .day-header {
         font-size: 16px;
+        padding: 6px 4px;
     }
 
     .event-pill {
@@ -619,8 +647,8 @@ body {
         font-size: 15px;
     }
 
-    .legend {
-        justify-content: center;
+    .calendar-grid {
+        min-height: 400px;
     }
 
     .fab {
@@ -635,27 +663,55 @@ body {
 @media (max-width: 480px) {
     .app-container {
         padding: 4px;
+        gap: 4px;
+    }
+
+    .app-header {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+
+    .app-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .legend {
+        padding: 4px 8px;
+        gap: 8px;
+    }
+
+    .legend-item {
+        font-size: 12px;
+    }
+
+    .legend-color {
+        width: 10px;
+        height: 10px;
+    }
+
+    .calendar-nav {
+        padding: 6px 10px;
+    }
+
+    .calendar-nav h2 {
+        font-size: 1.1rem;
     }
 
     .day-header {
         padding: 4px 2px;
-        font-size: 14px;
-    }
-
-    .day-number {
-        font-size: 16px;
-    }
-
-    .event-pill {
         font-size: 13px;
     }
 
-    .legend-item {
-        font-size: 14px;
+    .day-number {
+        font-size: 15px;
     }
 
-    .legend-color {
-        width: 12px;
-        height: 12px;
+    .event-pill {
+        font-size: 12px;
+        padding: 3px 5px;
+    }
+
+    .calendar-grid {
+        min-height: 350px;
     }
 }
