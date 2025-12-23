@@ -12,7 +12,7 @@ import os
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'family-calendar-secret-key-2024'  # Required for session management
+app.secret_key = os.environ.get('SECRET_KEY', 'family-calendar-secret-key-2024')
 
 # Database file path
 DATABASE = 'family_calendar.db'
