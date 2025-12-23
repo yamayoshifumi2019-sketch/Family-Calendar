@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Calendar</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with user info and login -->
+        <header class="app-header">
+            <h1>Family Calendar</h1>
+            <div class="user-section">
+                <!-- Login dropdown (shown when not logged in) -->
+                <div id="login-section" class="login-section">
+                    <select id="user-select">
+                        <option value="">Select Family Member</option>
+                    </select>
+                    <button id="login-btn" class="btn btn-primary">Login</button>
+                </div>
+                <!-- User info (shown when logged in) -->
+                <div id="user-info" class="user-info hidden">
+                    <span id="user-name-display"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content area -->
+        <main class="main-content">
+            <!-- Family member legend -->
+            <div class="legend" id="legend">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Calendar navigation -->
+            <div class="calendar-nav">
+                <button id="prev-month" class="btn btn-nav">&lt; Previous</button>
+                <h2 id="current-month-year"></h2>
+                <button id="next-month" class="btn btn-nav">Next &gt;</button>
+            </div>
+
+            <!-- Calendar grid -->
+            <div class="calendar-container">
+                <!-- Day headers -->
+                <div class="calendar-header">
+                    <div class="day-header">Sun</div>
+                    <div class="day-header">Mon</div>
+                    <div class="day-header">Tue</div>
+                    <div class="day-header">Wed</div>
+                    <div class="day-header">Thu</div>
+                    <div class="day-header">Fri</div>
+                    <div class="day-header">Sat</div>
+                </div>
+                <!-- Calendar days (populated by JavaScript) -->
+                <div class="calendar-grid" id="calendar-grid">
+                </div>
+            </div>
+        </main>
+
+        <!-- Add Event Button (floating) -->
+        <button id="add-event-btn" class="fab hidden" title="Add Event">+</button>
+
+        <!-- Event Modal (for adding/editing events) -->
+        <div id="event-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Add Event</h3>
+                    <button id="close-modal" class="btn-close">&times;</button>
+                </div>
+                <form id="event-form">
+                    <input type="hidden" id="event-id">
+
+                    <div class="form-group">
+                        <label for="event-title">Title *</label>
+                        <input type="text" id="event-title" required placeholder="Event title">
+                        <div id="title-suggestions" class="title-suggestions hidden">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event-date">Date *</label>
+                        <input type="date" id="event-date" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-start-time">Start Time (optional)</label>
+                            <input type="time" id="event-start-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-end-time">End Time (optional)</label>
+                            <input type="time" id="event-end-time">
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" id="delete-event-btn" class="btn btn-danger hidden">Delete</button>
+                        <div class="modal-actions-right">
+                            <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Event Details Modal (for viewing events on a day) -->
+        <div id="day-events-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="day-events-title">Events</h3>
+                    <button id="close-day-modal" class="btn-close">&times;</button>
+                </div>
+                <div id="day-events-list" class="events-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+                <div class="modal-actions">
+                    <button id="add-event-day-btn" class="btn btn-primary">Add Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
