@@ -501,11 +501,226 @@
             color: #666;
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
+        /* Responsive - Mobile First Calendar */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+                background: #667eea;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            /* Compact Top Bar */
+            .top-bar {
+                padding: 8px 12px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+            }
+
+            .top-row {
+                margin-bottom: 6px;
+            }
+
+            .top-row h1 {
+                font-size: 1rem;
+            }
+
+            .user-info {
+                gap: 8px;
+            }
+
+            .user-name {
+                font-size: 0.85rem;
+            }
+
+            .logout-btn {
+                padding: 4px 10px;
+                font-size: 0.75rem;
+                border-radius: 12px;
+            }
+
+            .bottom-row {
+                gap: 8px;
+            }
+
+            .family-buttons {
+                gap: 6px;
+            }
+
+            .family-btn {
+                padding: 5px 12px;
+                font-size: 0.8rem;
+                border-radius: 16px;
+                border-width: 1.5px;
+            }
+
+            /* Hide legend on mobile to save space */
+            .legend {
+                display: none;
+            }
+
+            /* Compact Calendar Navigation */
+            .calendar-nav {
+                padding: 8px 12px;
+                border-radius: 8px 8px 0 0;
+            }
+
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+                border-radius: 6px;
+            }
+
+            .current-month {
+                font-size: 1.1rem;
+            }
+
+            /* Calendar Grid - Main Focus */
+            .calendar {
+                border-radius: 0 0 8px 8px;
+            }
+
+            .weekdays {
+                background: #f0f2f5;
+            }
+
+            .weekday {
+                padding: 8px 2px;
+                font-size: 0.8rem;
+                font-weight: 700;
+            }
+
+            /* Large, Tappable Day Cells */
             .day {
-                min-height: 80px;
-                padding: 5px;
+                min-height: 70px;
+                padding: 4px;
+                border-color: #e0e3e8;
+            }
+
+            .day-number {
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+
+            /* Events styling for mobile */
+            .event-list {
+                gap: 2px;
+                max-height: 45px;
+            }
+
+            .event-item {
+                font-size: 0.65rem;
+                padding: 2px 4px;
+                border-radius: 3px;
+            }
+
+            .event-title {
+                max-width: 100%;
+            }
+
+            .event-time {
+                display: none;
+            }
+
+            /* Floating Add Button - Mobile optimized */
+            .add-event-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 54px;
+                height: 54px;
+                font-size: 1.8rem;
+            }
+
+            /* Modal - Mobile optimized */
+            .modal {
+                padding: 20px;
+                border-radius: 12px;
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .modal h2 {
+                font-size: 1.1rem;
+                margin-bottom: 15px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label {
+                font-size: 0.85rem;
+                margin-bottom: 4px;
+            }
+
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .modal-buttons {
+                margin-top: 15px;
+                gap: 8px;
+            }
+
+            .modal-btn {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            .suggestion-chip {
+                padding: 3px 8px;
+                font-size: 0.75rem;
+            }
+
+            /* Error message compact */
+            .error-message {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                margin-bottom: 8px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 380px) {
+            body {
+                padding: 4px;
+            }
+
+            .top-bar {
+                padding: 6px 8px;
+                margin-bottom: 6px;
+            }
+
+            .top-row h1 {
+                font-size: 0.9rem;
+            }
+
+            .family-btn {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .calendar-nav {
+                padding: 6px 8px;
+            }
+
+            .nav-btn {
+                padding: 5px 8px;
+                font-size: 0.75rem;
+            }
+
+            .current-month {
+                font-size: 1rem;
+            }
+
+            .day {
+                min-height: 60px;
+                padding: 3px;
             }
 
             .day-number {
@@ -513,35 +728,8 @@
             }
 
             .event-item {
-                font-size: 0.75rem;
-                padding: 2px 5px;
-            }
-
-            .top-row {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
-            }
-
-            .bottom-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .family-buttons {
-                justify-content: center;
-            }
-
-            .legend {
-                justify-content: center;
-            }
-
-            .calendar-nav {
-                padding: 10px 15px;
-            }
-
-            .current-month {
-                font-size: 1.2rem;
+                font-size: 0.6rem;
+                padding: 1px 3px;
             }
         }
     </style>
