@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Calendar</title>
+    <!-- Supabase JS Client (loaded before our script) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* CSS Variables */
         :root {
@@ -379,6 +381,17 @@
 
     <script>
         // ===================
+        // Supabase Configuration
+        // ===================
+        // IMPORTANT: Replace these with your Supabase project credentials
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';       // e.g., 'https://xxxxx.supabase.co'
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';  // Your anon/public key
+
+        // Supabase client (initialized in init)
+        let supabase = null;
+        let useSupabase = false;  // Will be set to true if Supabase connects successfully
+
+        // ===================
         // Configuration
         // ===================
         const FAMILY_MEMBERS = [
@@ -392,7 +405,6 @@
                              'July', 'August', 'September', 'October', 'November', 'December'];
 
         const STORAGE_KEYS = {
-            EVENTS: 'family_calendar_events',
             USER: 'family_calendar_user'
         };
 
@@ -408,24 +420,131 @@
         };
 
         // ===================
-        // localStorage Functions
+        // Supabase Functions
         // ===================
-        function saveEvents() {
-            localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(state.events));
-            console.log('[Storage] Saved', state.events.length, 'events');
-        }
+        async function initSupabase() {
+            // Check if credentials are configured
+            if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                console.warn('[Supabase] Credentials not configured - using localStorage only');
+                return false;
+            }
 
-        function loadEvents() {
+            // Check if Supabase library loaded
+            if (typeof window.supabase === 'undefined') {
+                console.error('[Supabase] Library not loaded - using localStorage only');
+                return false;
+            }
+
             try {
-                const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
-                state.events = data ? JSON.parse(data) : [];
-                console.log('[Storage] Loaded', state.events.length, 'events');
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('[Supabase] Client created, testing connection...');
+
+                // Test connection with a simple query
+                const { error } = await supabase.from('events').select('id').limit(1);
+                if (error) {
+                    console.error('[Supabase] Connection test failed:', error.message);
+                    return false;
+                }
+
+                console.log('[Supabase] Connected successfully!');
+                return true;
             } catch (e) {
-                console.error('[Storage] Failed to load events:', e);
-                state.events = [];
+                console.error('[Supabase] Failed to initialize:', e);
+                return false;
             }
         }
 
+        async function loadEventsFromSupabase() {
+            console.log('[Supabase] Loading all events...');
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('*')
+                    .order('date')
+                    .order('start_time');
+
+                if (error) throw error;
+
+                state.events = data || [];
+                console.log('[Supabase] Loaded', state.events.length, 'events');
+                return true;
+            } catch (e) {
+                console.error('[Supabase] Failed to load events:', e);
+                return false;
+            }
+        }
+
+        async function createEventInSupabase(eventData) {
+            console.log('[Supabase] Creating event...');
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .insert([{
+                        title: eventData.title,
+                        date: eventData.date,
+                        start_time: eventData.start_time,
+                        end_time: eventData.end_time,
+                        created_by: eventData.created_by
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                console.log('[Supabase] Created event:', data.id);
+                return data;
+            } catch (e) {
+                console.error('[Supabase] Failed to create event:', e);
+                throw e;
+            }
+        }
+
+        async function updateEventInSupabase(eventId, eventData) {
+            console.log('[Supabase] Updating event:', eventId);
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .update({
+                        title: eventData.title,
+                        date: eventData.date,
+                        start_time: eventData.start_time,
+                        end_time: eventData.end_time
+                    })
+                    .eq('id', eventId)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                console.log('[Supabase] Updated event:', eventId);
+                return data;
+            } catch (e) {
+                console.error('[Supabase] Failed to update event:', e);
+                throw e;
+            }
+        }
+
+        async function deleteEventFromSupabase(eventId) {
+            console.log('[Supabase] Deleting event:', eventId);
+            try {
+                const { error } = await supabase
+                    .from('events')
+                    .delete()
+                    .eq('id', eventId);
+
+                if (error) throw error;
+
+                console.log('[Supabase] Deleted event:', eventId);
+                return true;
+            } catch (e) {
+                console.error('[Supabase] Failed to delete event:', e);
+                throw e;
+            }
+        }
+
+        // ===================
+        // User Storage (always localStorage)
+        // ===================
         function saveUser() {
             if (state.currentUser) {
                 localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.currentUser));
@@ -679,7 +798,7 @@
             if (event) openEventModal(event);
         }
 
-        function handleEventSubmit(e) {
+        async function handleEventSubmit(e) {
             e.preventDefault();
 
             const id = document.getElementById('event-id').value;
@@ -691,36 +810,57 @@
                 created_by: state.currentUser.name
             };
 
-            if (id) {
-                // Update existing
-                const index = state.events.findIndex(e => e.id === parseInt(id));
-                if (index !== -1) {
-                    state.events[index] = { ...state.events[index], ...eventData };
-                    console.log('[Event] Updated event', id);
+            try {
+                if (useSupabase) {
+                    // Use Supabase
+                    if (id) {
+                        await updateEventInSupabase(id, eventData);
+                    } else {
+                        await createEventInSupabase(eventData);
+                    }
+                    // Reload all events from Supabase
+                    await loadEventsFromSupabase();
+                } else {
+                    // Use local state (no persistence without Supabase)
+                    if (id) {
+                        const index = state.events.findIndex(e => e.id === id || e.id === parseInt(id));
+                        if (index !== -1) {
+                            state.events[index] = { ...state.events[index], ...eventData };
+                            console.log('[Local] Updated event', id);
+                        }
+                    } else {
+                        eventData.id = getNextEventId();
+                        eventData.created_at = new Date().toISOString();
+                        state.events.push(eventData);
+                        console.log('[Local] Created event', eventData.id);
+                    }
                 }
-            } else {
-                // Create new
-                eventData.id = getNextEventId();
-                eventData.created_at = new Date().toISOString();
-                state.events.push(eventData);
-                console.log('[Event] Created event', eventData.id);
-            }
 
-            saveEvents();
-            renderCalendar();
-            closeEventModal();
+                renderCalendar();
+                closeEventModal();
+            } catch (error) {
+                alert('Failed to save event: ' + error.message);
+            }
         }
 
-        function handleEventDelete() {
+        async function handleEventDelete() {
             const id = document.getElementById('event-id').value;
             if (!id || !confirm('Delete this event?')) return;
 
-            state.events = state.events.filter(e => e.id !== parseInt(id));
-            console.log('[Event] Deleted event', id);
+            try {
+                if (useSupabase) {
+                    await deleteEventFromSupabase(id);
+                    await loadEventsFromSupabase();
+                } else {
+                    state.events = state.events.filter(e => e.id !== id && e.id !== parseInt(id));
+                    console.log('[Local] Deleted event', id);
+                }
 
-            saveEvents();
-            renderCalendar();
-            closeEventModal();
+                renderCalendar();
+                closeEventModal();
+            } catch (error) {
+                alert('Failed to delete event: ' + error.message);
+            }
         }
 
         function goToPrevMonth() {
@@ -746,14 +886,26 @@
         // ===================
         // Initialization
         // ===================
-        function init() {
+        async function init() {
             console.log('[Init] Starting...');
 
-            // Load data
+            // Load user from localStorage
             loadUser();
-            loadEvents();
 
-            // Render UI
+            // Try to connect to Supabase
+            useSupabase = await initSupabase();
+
+            if (useSupabase) {
+                // Load events from Supabase
+                await loadEventsFromSupabase();
+                console.log('[Init] Using Supabase for storage');
+            } else {
+                // No Supabase - calendar works but events won't persist
+                console.log('[Init] Using local mode (events will not persist across sessions)');
+                state.events = [];
+            }
+
+            // Render UI (always happens)
             renderUserSelect();
             renderLegend();
             renderUserSection();
@@ -801,6 +953,9 @@
             };
 
             console.log('[Init] Complete! Calendar is ready.');
+            if (!useSupabase) {
+                console.log('[Init] To enable cloud sync, configure SUPABASE_URL and SUPABASE_ANON_KEY');
+            }
         }
 
         // Start when DOM is ready
