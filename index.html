@@ -889,29 +889,21 @@
         async function init() {
             console.log('[Init] Starting...');
 
-            // Load user from localStorage
-            loadUser();
-
-            // Try to connect to Supabase
-            useSupabase = await initSupabase();
-
-            if (useSupabase) {
-                // Load events from Supabase
-                await loadEventsFromSupabase();
-                console.log('[Init] Using Supabase for storage');
-            } else {
-                // No Supabase - calendar works but events won't persist
-                console.log('[Init] Using local mode (events will not persist across sessions)');
-                state.events = [];
+            // ALWAYS render UI first - calendar must never be blank
+            try {
+                loadUser();
+                renderUserSelect();
+                renderLegend();
+                renderUserSection();
+                state.events = [];  // Start with empty events
+                renderCalendar();
+                console.log('[Init] UI rendered successfully');
+            } catch (uiError) {
+                console.error('[Init] UI render failed:', uiError);
+                return;  // Critical failure
             }
 
-            // Render UI (always happens)
-            renderUserSelect();
-            renderLegend();
-            renderUserSection();
-            renderCalendar();
-
-            // Event listeners
+            // Setup event listeners (must always happen)
             document.getElementById('login-btn').onclick = () => {
                 const id = parseInt(document.getElementById('user-select').value);
                 if (!id) return alert('Please select a family member');
@@ -944,7 +936,6 @@
                 openEventModal(null, state.selectedDate);
             };
 
-            // Close modals on backdrop click
             document.getElementById('event-modal').onclick = (e) => {
                 if (e.target.id === 'event-modal') closeEventModal();
             };
@@ -952,10 +943,22 @@
                 if (e.target.id === 'day-events-modal') closeDayEventsModal();
             };
 
-            console.log('[Init] Complete! Calendar is ready.');
-            if (!useSupabase) {
-                console.log('[Init] To enable cloud sync, configure SUPABASE_URL and SUPABASE_ANON_KEY');
+            // NOW try to connect to Supabase (non-blocking for UI)
+            try {
+                useSupabase = await initSupabase();
+                if (useSupabase) {
+                    await loadEventsFromSupabase();
+                    renderCalendar();  // Re-render with loaded events
+                    console.log('[Init] Supabase connected, events loaded');
+                } else {
+                    console.log('[Init] No Supabase - local mode only');
+                }
+            } catch (supabaseError) {
+                console.error('[Init] Supabase error (calendar still works):', supabaseError);
+                useSupabase = false;
             }
+
+            console.log('[Init] Complete! Calendar is ready.');
         }
 
         // Start when DOM is ready
