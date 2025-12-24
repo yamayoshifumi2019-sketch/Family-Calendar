@@ -503,33 +503,46 @@
 
         /* Responsive - Mobile First Calendar */
         @media (max-width: 768px) {
+            html {
+                height: 100%;
+            }
+
             body {
                 padding: 0;
+                margin: 0;
                 background: #667eea;
-                min-height: auto;
+                min-height: 100dvh;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
             }
 
             .container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
                 max-width: 100%;
                 width: 100%;
                 margin: 0;
-                padding: 2px;
+                padding: 0;
+                min-height: 0;
             }
 
             /* Inline Top Bar */
             .top-bar {
-                padding: 4px 6px;
-                margin-bottom: 2px;
+                padding: 3px 6px;
+                margin: 0;
                 border-radius: 0;
                 box-shadow: none;
+                flex-shrink: 0;
             }
 
             .top-row {
-                margin-bottom: 3px;
+                margin-bottom: 2px;
             }
 
             .top-row h1 {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
                 font-weight: 600;
             }
 
@@ -538,27 +551,27 @@
             }
 
             .user-name {
-                font-size: 0.6rem;
+                font-size: 0.55rem;
             }
 
             .logout-btn {
-                padding: 2px 5px;
-                font-size: 0.55rem;
-                border-radius: 6px;
+                padding: 1px 4px;
+                font-size: 0.5rem;
+                border-radius: 4px;
             }
 
             .bottom-row {
-                gap: 3px;
+                gap: 2px;
             }
 
             .family-buttons {
-                gap: 3px;
+                gap: 2px;
             }
 
             .family-btn {
-                padding: 2px 6px;
-                font-size: 0.55rem;
-                border-radius: 10px;
+                padding: 2px 5px;
+                font-size: 0.5rem;
+                border-radius: 8px;
                 border-width: 1px;
             }
 
@@ -569,65 +582,77 @@
 
             /* Compact Calendar Navigation */
             .calendar-nav {
-                padding: 3px 6px;
+                padding: 2px 6px;
+                margin: 0;
                 border-radius: 0;
                 box-shadow: none;
+                flex-shrink: 0;
             }
 
             .nav-btn {
-                padding: 2px 6px;
-                font-size: 0.55rem;
-                border-radius: 4px;
+                padding: 2px 5px;
+                font-size: 0.5rem;
+                border-radius: 3px;
             }
 
             .current-month {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 font-weight: 600;
             }
 
-            /* Calendar Grid - Full Width */
+            /* Calendar Grid - Fills Remaining Height */
             .calendar {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
                 border-radius: 0;
                 box-shadow: none;
+                min-height: 0;
             }
 
             .weekdays {
                 background: #f0f2f5;
+                flex-shrink: 0;
             }
 
             .weekday {
-                padding: 3px 0;
-                font-size: 0.5rem;
+                padding: 2px 0;
+                font-size: 0.45rem;
                 font-weight: 600;
             }
 
-            /* Day Grid - Width-based sizing */
+            /* Day Grid - Expands to Fill Height */
             .days {
+                flex: 1;
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
+                grid-auto-rows: 1fr;
+                min-height: 0;
             }
 
             .day {
-                /* Width-based height for square-ish cells */
-                aspect-ratio: 1 / 1.1;
                 min-height: 0;
                 padding: 1px;
                 border-color: #e0e3e8;
                 overflow: hidden;
+                display: flex;
+                flex-direction: column;
             }
 
             .day-number {
-                font-size: 0.5rem;
+                font-size: 0.45rem;
                 font-weight: 500;
                 margin-bottom: 0;
                 line-height: 1;
+                flex-shrink: 0;
             }
 
             /* Events - Ultra Compact */
             .event-list {
+                flex: 1;
                 gap: 1px;
-                max-height: none;
                 overflow: hidden;
+                min-height: 0;
             }
 
             .event-item {
@@ -647,19 +672,20 @@
 
             /* Floating Add Button */
             .add-event-btn {
-                bottom: 10px;
-                right: 10px;
-                width: 44px;
-                height: 44px;
-                font-size: 1.4rem;
+                bottom: 8px;
+                right: 8px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
             }
 
             /* Error message - minimal */
             .error-message {
-                padding: 3px 6px;
-                font-size: 0.6rem;
-                margin-bottom: 2px;
+                padding: 2px 6px;
+                font-size: 0.55rem;
+                margin: 0;
                 border-radius: 0;
+                flex-shrink: 0;
             }
 
             /* Modal - Mobile optimized */
@@ -708,48 +734,43 @@
 
         /* Extra small screens */
         @media (max-width: 380px) {
-            .container {
-                padding: 1px;
-            }
-
             .top-bar {
-                padding: 3px 4px;
-                margin-bottom: 1px;
+                padding: 2px 4px;
             }
 
             .top-row {
-                margin-bottom: 2px;
+                margin-bottom: 1px;
             }
 
             .top-row h1 {
-                font-size: 0.6rem;
+                font-size: 0.55rem;
             }
 
             .family-btn {
-                padding: 2px 4px;
-                font-size: 0.5rem;
+                padding: 1px 4px;
+                font-size: 0.45rem;
             }
 
             .calendar-nav {
-                padding: 2px 4px;
+                padding: 1px 4px;
             }
 
             .nav-btn {
-                padding: 2px 4px;
-                font-size: 0.5rem;
+                padding: 1px 4px;
+                font-size: 0.45rem;
             }
 
             .current-month {
-                font-size: 0.65rem;
+                font-size: 0.6rem;
             }
 
             .weekday {
-                font-size: 0.45rem;
-                padding: 2px 0;
+                font-size: 0.4rem;
+                padding: 1px 0;
             }
 
             .day-number {
-                font-size: 0.45rem;
+                font-size: 0.4rem;
             }
 
             .event-item {
@@ -758,11 +779,11 @@
             }
 
             .add-event-btn {
-                bottom: 6px;
-                right: 6px;
-                width: 38px;
-                height: 38px;
-                font-size: 1.2rem;
+                bottom: 5px;
+                right: 5px;
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
             }
         }
     </style>
