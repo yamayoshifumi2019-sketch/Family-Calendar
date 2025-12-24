@@ -1187,11 +1187,7 @@
         }
 
         function formatEventDisplay(event) {
-            const time = formatEventTime(event.start_time, event.end_time);
             const title = escapeHtml(event.title);
-            if (time) {
-                return `<span class="event-title">${title}</span><span class="event-time">: ${time}</span>`;
-            }
             return `<span class="event-title">${title}</span>`;
         }
 
