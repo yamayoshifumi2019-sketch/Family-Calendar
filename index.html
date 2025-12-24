@@ -872,39 +872,9 @@
         const STORAGE_KEY_USER = 'family_calendar_user';
 
         // ===================
-        // DOM Elements
+        // DOM Elements (initialized in init())
         // ===================
-        const elements = {
-            loginSection: document.getElementById('login-section'),
-            userInfo: document.getElementById('user-info'),
-            userSelect: document.getElementById('user-select'),
-            loginBtn: document.getElementById('login-btn'),
-            logoutBtn: document.getElementById('logout-btn'),
-            userNameDisplay: document.getElementById('user-name-display'),
-            calendarGrid: document.getElementById('calendar-grid'),
-            currentMonthYear: document.getElementById('current-month-year'),
-            prevMonthBtn: document.getElementById('prev-month'),
-            nextMonthBtn: document.getElementById('next-month'),
-            legend: document.getElementById('legend'),
-            addEventBtn: document.getElementById('add-event-btn'),
-            eventModal: document.getElementById('event-modal'),
-            modalTitle: document.getElementById('modal-title'),
-            closeModal: document.getElementById('close-modal'),
-            eventForm: document.getElementById('event-form'),
-            eventId: document.getElementById('event-id'),
-            eventTitle: document.getElementById('event-title'),
-            eventDate: document.getElementById('event-date'),
-            eventStartTime: document.getElementById('event-start-time'),
-            eventEndTime: document.getElementById('event-end-time'),
-            titleSuggestions: document.getElementById('title-suggestions'),
-            deleteEventBtn: document.getElementById('delete-event-btn'),
-            cancelBtn: document.getElementById('cancel-btn'),
-            dayEventsModal: document.getElementById('day-events-modal'),
-            dayEventsTitle: document.getElementById('day-events-title'),
-            dayEventsList: document.getElementById('day-events-list'),
-            closeDayModal: document.getElementById('close-day-modal'),
-            addEventDayBtn: document.getElementById('add-event-day-btn'),
-        };
+        let elements = {};
 
         // ===================
         // Supabase API Functions
@@ -1634,6 +1604,39 @@
 
         async function init() {
             console.log('[Calendar] Initializing...');
+
+            // Initialize DOM elements (must be done after DOM is ready)
+            elements = {
+                loginSection: document.getElementById('login-section'),
+                userInfo: document.getElementById('user-info'),
+                userSelect: document.getElementById('user-select'),
+                loginBtn: document.getElementById('login-btn'),
+                logoutBtn: document.getElementById('logout-btn'),
+                userNameDisplay: document.getElementById('user-name-display'),
+                calendarGrid: document.getElementById('calendar-grid'),
+                currentMonthYear: document.getElementById('current-month-year'),
+                prevMonthBtn: document.getElementById('prev-month'),
+                nextMonthBtn: document.getElementById('next-month'),
+                legend: document.getElementById('legend'),
+                addEventBtn: document.getElementById('add-event-btn'),
+                eventModal: document.getElementById('event-modal'),
+                modalTitle: document.getElementById('modal-title'),
+                closeModal: document.getElementById('close-modal'),
+                eventForm: document.getElementById('event-form'),
+                eventId: document.getElementById('event-id'),
+                eventTitle: document.getElementById('event-title'),
+                eventDate: document.getElementById('event-date'),
+                eventStartTime: document.getElementById('event-start-time'),
+                eventEndTime: document.getElementById('event-end-time'),
+                titleSuggestions: document.getElementById('title-suggestions'),
+                deleteEventBtn: document.getElementById('delete-event-btn'),
+                cancelBtn: document.getElementById('cancel-btn'),
+                dayEventsModal: document.getElementById('day-events-modal'),
+                dayEventsTitle: document.getElementById('day-events-title'),
+                dayEventsList: document.getElementById('day-events-list'),
+                closeDayModal: document.getElementById('close-day-modal'),
+                addEventDayBtn: document.getElementById('add-event-day-btn'),
+            };
 
             try {
                 // Step 1: Check if Supabase library is loaded
