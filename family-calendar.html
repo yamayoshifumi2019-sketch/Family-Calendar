@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Calendar</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Unified Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .top-row h1 {
+            color: #333;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .family-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .family-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .family-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .family-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ee5a5a;
+        }
+
+        /* Calendar Navigation */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #5a6fd6;
+        }
+
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Calendar Grid */
+        .calendar {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .weekday {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .weekday:first-child {
+            color: #ff6b6b;
+        }
+
+        .weekday:last-child {
+            color: #4dabf7;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .day {
+            min-height: 140px;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .day:hover {
+            background: #f8f9fa;
+        }
+
+        .day.other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+        }
+
+        .day.today {
+            background: #fff3cd;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .day:nth-child(7n+1) .day-number {
+            color: #ff6b6b;
+        }
+
+        .day:nth-child(7n) .day-number {
+            color: #4dabf7;
+        }
+
+        .day.other-month .day-number {
+            color: #ccc;
+        }
+
+        /* Events in Calendar */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+            overflow: hidden;
+            color: white;
+            cursor: pointer;
+            max-width: 100%;
+            white-space: nowrap;
+        }
+
+        .event-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 80px;
+        }
+
+        .event-time {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .event-item[data-owner="きんぐ"] {
+            background: #ff6b6b;
+        }
+
+        .event-item[data-owner="お母さん"] {
+            background: #51cf66;
+        }
+
+        .event-item[data-owner="ゆう"] {
+            background: #339af0;
+        }
+
+        .event-item[data-owner="おれ"] {
+            background: #fcc419;
+            color: #333;
+        }
+
+        /* Add Event Button */
+        .add-event-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .add-event-btn:hover {
+            transform: scale(1.1);
+            background: #5a6fd6;
+        }
+
+        .add-event-btn.visible {
+            display: block;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10000;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Title Suggestions */
+        .title-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .title-suggestions:empty {
+            display: none;
+        }
+
+        .suggestion-chip {
+            padding: 4px 10px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .time-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-row .form-group {
+            flex: 1;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .modal-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #5a6fd6;
+        }
+
+        .modal-btn.secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #dee2e6;
+        }
+
+        .modal-btn.danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .modal-btn.danger:hover {
+            background: #ee5a5a;
+        }
+
+        /* Event Detail Modal */
+        .event-detail {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .event-detail-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .event-detail-info {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Error message */
+        .error-message {
+            background: #fff5f5;
+            border: 1px solid #ff6b6b;
+            color: #c92a2a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .day {
+                min-height: 80px;
+                padding: 5px;
+            }
+
+            .day-number {
+                font-size: 1rem;
+            }
+
+            .event-item {
+                font-size: 0.75rem;
+                padding: 2px 5px;
+            }
+
+            .top-row {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .bottom-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .family-buttons {
+                justify-content: center;
+            }
+
+            .legend {
+                justify-content: center;
+            }
+
+            .calendar-nav {
+                padding: 10px 15px;
+            }
+
+            .current-month {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message"></div>
+
+        <!-- Unified Top Bar -->
+        <header class="top-bar">
+            <div class="top-row">
+                <h1>Family Calendar</h1>
+                <div class="user-info">
+                    <span id="userDisplay"></span>
+                </div>
+            </div>
+            <div class="bottom-row" id="loginSection">
+                <div class="family-buttons">
+                    <button class="family-btn" data-member="きんぐ">きんぐ</button>
+                    <button class="family-btn" data-member="お母さん">お母さん</button>
+                    <button class="family-btn" data-member="ゆう">ゆう</button>
+                    <button class="family-btn" data-member="おれ">おれ</button>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b6b;"></div>
+                        <span>きんぐ</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #51cf66;"></div>
+                        <span>お母さん</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #339af0;"></div>
+                        <span>ゆう</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fcc419;"></div>
+                        <span>おれ</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Calendar Navigation -->
+        <nav class="calendar-nav">
+            <button class="nav-btn" id="prevMonth">◀ 前月</button>
+            <span class="current-month" id="currentMonth"></span>
+            <button class="nav-btn" id="nextMonth">次月 ▶</button>
+        </nav>
+
+        <!-- Calendar Grid -->
+        <div class="calendar">
+            <div class="weekdays">
+                <div class="weekday">日</div>
+                <div class="weekday">月</div>
+                <div class="weekday">火</div>
+                <div class="weekday">水</div>
+                <div class="weekday">木</div>
+                <div class="weekday">金</div>
+                <div class="weekday">土</div>
+            </div>
+            <div class="days" id="calendarDays">
+                <!-- Days will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Button -->
+    <button id="addEventBtn" class="add-event-btn">+</button>
+
+    <!-- Add/Edit Event Modal -->
+    <div id="eventModal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="modalTitle">予定を追加</h2>
+            <form id="eventForm">
+                <input type="hidden" id="eventId">
+                <div class="form-group">
+                    <label for="eventTitle">タイトル *</label>
+                    <input type="text" id="eventTitle" required placeholder="予定のタイトル">
+                    <div id="titleSuggestions" class="title-suggestions"></div>
+                </div>
+                <div class="form-group">
+                    <label for="eventDate">日付 *</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                <div class="time-row">
+                    <div class="form-group">
+                        <label for="eventStartTime">開始時刻</label>
+                        <input type="time" id="eventStartTime">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventEndTime">終了時刻</label>
+                        <input type="time" id="eventEndTime">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn secondary" id="cancelBtn">キャンセル</button>
+                    <button type="button" class="modal-btn danger" id="deleteBtn" style="display: none;">削除</button>
+                    <button type="button" class="modal-btn primary" id="saveBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Event Modal -->
+    <div id="viewModal" class="modal-overlay">
+        <div class="modal">
+            <h2>予定の詳細</h2>
+            <div class="event-detail">
+                <div class="event-detail-title" id="viewTitle"></div>
+                <div class="event-detail-info" id="viewInfo"></div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn secondary" id="viewCloseBtn">閉じる</button>
+                <button type="button" class="modal-btn primary" id="viewEditBtn" style="display: none;">編集</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('JS loaded');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready');
+
+            // ============================================
+            // SUPABASE CONFIGURATION
+            // ============================================
+            // Replace these with your actual Supabase credentials
+            const SUPABASE_URL = 'https://kbomlessjusnwiewewau.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_iLlsjYX8PlM4yfjeAGLGFg__zMUA2QP';
+
+            // ============================================
+            // STATE
+            // ============================================
+            let supabase = null;
+            let currentUser = null;
+            let currentDate = new Date();
+            let events = [];
+            let pastTitles = [];
+
+            // Family members
+            const FAMILY_MEMBERS = ['きんぐ', 'お母さん', 'ゆう', 'おれ'];
+
+            // ============================================
+            // DOM ELEMENTS
+            // ============================================
+            const errorMessage = document.getElementById('errorMessage');
+            const loginSection = document.getElementById('loginSection');
+            const userDisplay = document.getElementById('userDisplay');
+            const calendarDays = document.getElementById('calendarDays');
+            const currentMonthDisplay = document.getElementById('currentMonth');
+            const addEventBtn = document.getElementById('addEventBtn');
+            const eventModal = document.getElementById('eventModal');
+            const viewModal = document.getElementById('viewModal');
+            const eventForm = document.getElementById('eventForm');
+            const modalTitle = document.getElementById('modalTitle');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const viewEditBtn = document.getElementById('viewEditBtn');
+
+            // ============================================
+            // ERROR HANDLING
+            // ============================================
+            function showError(message) {
+                console.error('Error:', message);
+                errorMessage.textContent = message;
+                errorMessage.classList.add('visible');
+                setTimeout(() => {
+                    errorMessage.classList.remove('visible');
+                }, 5000);
+            }
+
+            // ============================================
+            // SUPABASE INITIALIZATION
+            // ============================================
+            function initSupabase() {
+                try {
+                    if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                        console.warn('Supabase credentials not configured - running in demo mode');
+                        return null;
+                    }
+                    if (window.supabase && window.supabase.createClient) {
+                        return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    } else {
+                        console.warn('Supabase library not loaded');
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('Supabase init error:', error);
+                    return null;
+                }
+            }
+
+            // ============================================
+            // LOGIN FUNCTIONS
+            // ============================================
+        function login(member) {
+            currentUser = member;
+            fetchPastTitles(member);
+            updateLoginUI();
+            renderCalendar();
+        }
+
+        function logout() {
+            currentUser = null;
+            pastTitles = [];
+            updateLoginUI();
+            renderCalendar();
+        }
+
+        function updateLoginUI() {
+            const familyBtns = document.querySelectorAll('.family-btn');
+
+            if (currentUser) {
+                userDisplay.innerHTML = `
+                    <span class="user-name">${currentUser}</span>
+                    <button class="logout-btn" id="logoutBtn">ログアウト</button>
+                `;
+                document.getElementById('logoutBtn').addEventListener('click', logout);
+                addEventBtn.classList.add('visible');
+
+                familyBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.member === currentUser);
+                });
+            } else {
+                userDisplay.innerHTML = '<span style="color: #888;">ログインしていません</span>';
+                addEventBtn.classList.remove('visible');
+
+                familyBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+        }
+
+        // ============================================
+        // CALENDAR FUNCTIONS
+        // ============================================
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Update month display
+            currentMonthDisplay.textContent = `${year}年 ${month + 1}月`;
+
+            // Get first day of month and total days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDayOfWeek = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            // Get previous month's last days
+            const prevLastDay = new Date(year, month, 0).getDate();
+
+            // Today's date for highlighting
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+            let html = '';
+            let dayCount = 1;
+            let nextMonthDay = 1;
+
+            // Calculate total rows needed
+            const totalCells = Math.ceil((startDayOfWeek + totalDays) / 7) * 7;
+
+            for (let i = 0; i < totalCells; i++) {
+                let dateStr, dayNum, isOtherMonth = false;
+
+                if (i < startDayOfWeek) {
+                    // Previous month days
+                    dayNum = prevLastDay - startDayOfWeek + i + 1;
+                    const prevMonth = month === 0 ? 11 : month - 1;
+                    const prevYear = month === 0 ? year - 1 : year;
+                    dateStr = formatDateStr(prevYear, prevMonth, dayNum);
+                    isOtherMonth = true;
+                } else if (dayCount > totalDays) {
+                    // Next month days
+                    dayNum = nextMonthDay++;
+                    const nextMonth = month === 11 ? 0 : month + 1;
+                    const nextYear = month === 11 ? year + 1 : year;
+                    dateStr = formatDateStr(nextYear, nextMonth, dayNum);
+                    isOtherMonth = true;
+                } else {
+                    // Current month days
+                    dayNum = dayCount++;
+                    dateStr = formatDateStr(year, month, dayNum);
+                }
+
+                const isToday = isCurrentMonth && !isOtherMonth && dayNum === today.getDate();
+                const dayEvents = events.filter(e => e.date === dateStr);
+
+                html += `
+                    <div class="day ${isOtherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}"
+                         data-date="${dateStr}">
+                        <div class="day-number">${dayNum}</div>
+                        <div class="event-list">
+                            ${dayEvents.map(e => `
+                                <div class="event-item"
+                                     data-owner="${e.created_by}"
+                                     data-id="${e.id}">
+                                    ${formatEventDisplay(e)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            calendarDays.innerHTML = html;
+
+            // Add click handlers to event items
+            document.querySelectorAll('.event-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    viewEvent(item.dataset.id);
+                });
+            });
+
+            // Add click handlers to days
+            document.querySelectorAll('.day').forEach(day => {
+                day.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('event-item')) return;
+                    if (currentUser) {
+                        openAddModal(day.dataset.date);
+                    }
+                });
+            });
+        }
+
+        function formatDateStr(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatEventTime(startTime, endTime) {
+            // Format time as HH:mm (24-hour format)
+            // Returns empty string if no time exists
+            if (!startTime) {
+                return '';
+            }
+            // Extract HH:mm from time string (handles both "HH:mm" and "HH:mm:ss" formats)
+            const start = startTime.substring(0, 5);
+            if (endTime) {
+                const end = endTime.substring(0, 5);
+                return `${start}–${end}`;
+            }
+            return start;
+        }
+
+        function formatEventDisplay(event) {
+            const time = formatEventTime(event.start_time, event.end_time);
+            const title = escapeHtml(event.title);
+            if (time) {
+                return `<span class="event-title">${title}</span><span class="event-time">: ${time}</span>`;
+            }
+            return `<span class="event-title">${title}</span>`;
+        }
+
+        // ============================================
+        // EVENT FUNCTIONS
+        // ============================================
+        async function loadEvents() {
+            if (!supabase) {
+                // Demo mode - events are stored in local array
+                console.log('Demo mode: using local events array');
+                renderCalendar();
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('*')
+                    .order('start_time', { ascending: true });
+
+                if (error) {
+                    throw error;
+                }
+
+                // Map Supabase data to app format
+                events = (data || []).map(row => ({
+                    id: row.id,
+                    title: row.title,
+                    date: row.start_time ? row.start_time.split('T')[0] : null,
+                    start_time: row.start_time ? row.start_time.split('T')[1]?.substring(0, 5) : null,
+                    end_time: row.end_time ? row.end_time.split('T')[1]?.substring(0, 5) : null,
+                    created_by: row.user_name,
+                    created_at: row.created_at
+                }));
+                renderCalendar();
+            } catch (error) {
+                showError(`データ読み込みエラー: ${error.message}`);
+                console.error(error);
+                events = [];
+                renderCalendar();
+            }
+        }
+
+        async function fetchPastTitles(userName) {
+            if (!supabase || !userName) {
+                pastTitles = [];
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('title')
+                    .eq('user_name', userName);
+
+                if (error) throw error;
+
+                // Get unique titles
+                const uniqueTitles = [...new Set(data.map(row => row.title))];
+                pastTitles = uniqueTitles;
+                console.log('Past titles loaded:', pastTitles);
+            } catch (error) {
+                console.error('Failed to fetch past titles:', error);
+                pastTitles = [];
+            }
+        }
+
+        async function saveEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('eventStartTime').value || '00:00';
+            const endTime = document.getElementById('eventEndTime').value || '23:59';
+            const eventId = document.getElementById('eventId').value;
+
+            if (!title || !date) {
+                showError('タイトルと日付は必須です');
+                return;
+            }
+
+            if (!currentUser) {
+                showError('ログインしてください');
+                return;
+            }
+
+            // Combine date and time into timestamptz format
+            const startTimestamp = `${date}T${startTime}:00`;
+            const endTimestamp = `${date}T${endTime}:00`;
+
+            try {
+                if (supabase) {
+                    // Save to Supabase (cloud mode)
+                    if (eventId) {
+                        // Update existing event
+                        const { error } = await supabase
+                            .from('events')
+                            .update({
+                                title,
+                                start_time: startTimestamp,
+                                end_time: endTimestamp
+                            })
+                            .eq('id', eventId)
+                            .eq('user_name', currentUser);
+
+                        if (error) throw error;
+                    } else {
+                        // Create new event
+                        const { error } = await supabase
+                            .from('events')
+                            .insert({
+                                title,
+                                start_time: startTimestamp,
+                                end_time: endTimestamp,
+                                user_name: currentUser
+                            });
+
+                        if (error) throw error;
+                    }
+                    await loadEvents();
+                } else {
+                    // Demo mode - save to local array
+                    if (eventId) {
+                        // Update existing event
+                        const index = events.findIndex(e => e.id == eventId);
+                        if (index !== -1 && events[index].created_by === currentUser) {
+                            events[index] = {
+                                ...events[index],
+                                title,
+                                date,
+                                start_time: startTime,
+                                end_time: endTime
+                            };
+                        }
+                    } else {
+                        // Create new event
+                        const newEvent = {
+                            id: Date.now(),
+                            title,
+                            date,
+                            start_time: startTime,
+                            end_time: endTime,
+                            created_by: currentUser,
+                            created_at: new Date().toISOString()
+                        };
+                        events.push(newEvent);
+                    }
+                    renderCalendar();
+                }
+
+                closeModal();
+            } catch (error) {
+                showError(`保存エラー: ${error.message}`);
+            }
+        }
+
+        async function deleteEvent() {
+            const eventId = document.getElementById('eventId').value;
+
+            if (!eventId) return;
+
+            if (!confirm('この予定を削除しますか？')) return;
+
+            try {
+                if (supabase) {
+                    // Delete from Supabase (cloud mode)
+                    console.log('Deleting event:', eventId);
+                    const { error } = await supabase
+                        .from('events')
+                        .delete()
+                        .eq('id', eventId);
+
+                    if (error) {
+                        console.error('Delete error:', error);
+                        throw error;
+                    }
+                    console.log('Delete successful');
+                    await loadEvents();
+                } else {
+                    // Demo mode - delete from local array
+                    const index = events.findIndex(e => e.id == eventId && e.created_by === currentUser);
+                    if (index !== -1) {
+                        events.splice(index, 1);
+                    }
+                    renderCalendar();
+                }
+
+                closeModal();
+            } catch (error) {
+                showError(`削除エラー: ${error.message}`);
+            }
+        }
+
+        function viewEvent(eventId) {
+            const event = events.find(ev => ev.id == eventId);
+            if (!event) return;
+
+            document.getElementById('viewTitle').textContent = event.title;
+
+            let info = `📅 ${event.date}`;
+            if (event.start_time) {
+                info += `\n🕐 ${event.start_time}`;
+                if (event.end_time) {
+                    info += ` 〜 ${event.end_time}`;
+                }
+            }
+            info += `\n👤 ${event.created_by}`;
+
+            document.getElementById('viewInfo').innerHTML = info.replace(/\n/g, '<br>');
+
+            // Show edit button only if current user is the owner
+            if (currentUser && event.created_by === currentUser) {
+                viewEditBtn.style.display = 'block';
+                viewEditBtn.onclick = () => {
+                    viewModal.classList.remove('active');
+                    openEditModal(event);
+                };
+            } else {
+                viewEditBtn.style.display = 'none';
+            }
+
+            viewModal.classList.add('active');
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function renderSuggestions() {
+            const container = document.getElementById('titleSuggestions');
+            if (!container) return;
+
+            if (pastTitles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = pastTitles.map(title =>
+                `<span class="suggestion-chip" data-title="${escapeHtml(title)}">${escapeHtml(title)}</span>`
+            ).join('');
+
+            container.querySelectorAll('.suggestion-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.getElementById('eventTitle').value = chip.dataset.title;
+                });
+            });
+        }
+
+        function openAddModal(date) {
+            modalTitle.textContent = '予定を追加';
+            document.getElementById('eventId').value = '';
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = date || '';
+            document.getElementById('eventStartTime').value = '';
+            document.getElementById('eventEndTime').value = '';
+            deleteBtn.style.display = 'none';
+            renderSuggestions();
+            eventModal.classList.add('active');
+        }
+
+        function openEditModal(event) {
+            modalTitle.textContent = '予定を編集';
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventStartTime').value = event.start_time || '';
+            document.getElementById('eventEndTime').value = event.end_time || '';
+            deleteBtn.style.display = 'block';
+            document.getElementById('titleSuggestions').innerHTML = '';
+            eventModal.classList.add('active');
+        }
+
+        function closeModal() {
+            eventModal.classList.remove('active');
+            viewModal.classList.remove('active');
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        // Family member login buttons
+        document.querySelectorAll('.family-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                login(btn.dataset.member);
+            });
+        });
+
+        // Navigation buttons
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // Add event button
+        addEventBtn.addEventListener('click', () => {
+            const today = new Date();
+            const dateStr = formatDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+            openAddModal(dateStr);
+        });
+
+        // Modal buttons
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('viewCloseBtn').addEventListener('click', closeModal);
+        deleteBtn.addEventListener('click', deleteEvent);
+
+        // Save button click handler
+        document.getElementById('saveBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Save button clicked');
+            saveEvent();
+        });
+
+        // Close modal on overlay click
+        eventModal.addEventListener('click', (e) => {
+            if (e.target === eventModal) closeModal();
+        });
+
+        viewModal.addEventListener('click', (e) => {
+            if (e.target === viewModal) closeModal();
+        });
+
+            // ============================================
+            // REAL-TIME SUBSCRIPTION
+            // ============================================
+            function setupRealtimeSubscription() {
+                if (!supabase) return;
+
+                try {
+                    supabase
+                        .channel('events-channel')
+                        .on('postgres_changes',
+                            { event: '*', schema: 'public', table: 'events' },
+                            (payload) => {
+                                console.log('Realtime update:', payload);
+                                loadEvents();
+                            }
+                        )
+                        .subscribe();
+                } catch (error) {
+                    console.error('Realtime subscription error:', error);
+                }
+            }
+
+            // ============================================
+            // INITIALIZATION
+            // ============================================
+            async function init() {
+                console.log('init called');
+
+                // Initialize Supabase (optional - app works without it in demo mode)
+                supabase = initSupabase();
+
+                // Always render UI first
+                updateLoginUI();
+                renderCalendar();
+
+                // Then try to load events from Supabase
+                if (supabase) {
+                    await loadEvents();
+                    setupRealtimeSubscription();
+                } else {
+                    console.log('Running in demo mode - no cloud storage');
+                }
+            }
+
+            // Start the app
+            init();
+        }); // End DOMContentLoaded
+    </script>
+</body>
+</html>
