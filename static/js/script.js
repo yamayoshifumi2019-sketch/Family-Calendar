@@ -13,10 +13,17 @@ const state = {
     currentUser: null,          // Currently logged-in user
     users: [],                  // All family members
     events: [],                 // Events for current month
+    allEvents: [],              // All events (for localStorage)
     currentYear: new Date().getFullYear(),
     currentMonth: new Date().getMonth(),  // 0-indexed
     selectedDate: null,         // Date selected for new event
     savedTitles: [],            // Saved titles for current user (suggestions)
+};
+
+// localStorage keys
+const STORAGE_KEYS = {
+    EVENTS: 'family_calendar_events',
+    CURRENT_USER: 'family_calendar_current_user',
 };
 
 // Month names for display
@@ -24,6 +31,97 @@ const MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
+
+// ===================
+// localStorage Functions
+// ===================
+
+/**
+ * Save all events to localStorage
+ */
+function saveEventsToStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(state.allEvents));
+    } catch (error) {
+        console.error('Failed to save events to localStorage:', error);
+    }
+}
+
+/**
+ * Load all events from localStorage
+ * @returns {Array} - Array of events or empty array
+ */
+function loadEventsFromStorage() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEYS.EVENTS);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error('Failed to load events from localStorage:', error);
+        return [];
+    }
+}
+
+/**
+ * Save current user to localStorage
+ */
+function saveCurrentUserToStorage() {
+    try {
+        if (state.currentUser) {
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(state.currentUser));
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        }
+    } catch (error) {
+        console.error('Failed to save current user to localStorage:', error);
+    }
+}
+
+/**
+ * Load current user from localStorage
+ * @returns {object|null} - User object or null
+ */
+function loadCurrentUserFromStorage() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+        return data ? JSON.parse(data) : null;
+    } catch (error) {
+        console.error('Failed to load current user from localStorage:', error);
+        return null;
+    }
+}
+
+/**
+ * Get next available event ID for localStorage events
+ * @returns {number} - Next ID
+ */
+function getNextEventId() {
+    if (state.allEvents.length === 0) return 1;
+    const maxId = Math.max(...state.allEvents.map(e => e.id || 0));
+    return maxId + 1;
+}
+
+/**
+ * Filter events for a specific month from allEvents
+ * @param {number} year - Year
+ * @param {number} month - Month (0-indexed)
+ * @returns {Array} - Filtered events
+ */
+function filterEventsForMonth(year, month) {
+    const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    let endDate;
+    if (month === 11) {
+        endDate = `${year + 1}-01-01`;
+    } else {
+        endDate = `${year}-${String(month + 2).padStart(2, '0')}-01`;
+    }
+
+    return state.allEvents.filter(event =>
+        event.date >= startDate && event.date < endDate
+    ).sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.start_time || '').localeCompare(b.start_time || '');
+    });
+}
 
 // ===================
 // DOM Elements
@@ -137,22 +235,39 @@ async function logout() {
 }
 
 /**
- * Get events for a specific month
+ * Get events for a specific month (from localStorage)
  */
 async function fetchEvents(year, month) {
-    const events = await api(`/api/events?year=${year}&month=${month + 1}`);
-    state.events = events;
-    return events;
+    // Filter events for the requested month from allEvents
+    state.events = filterEventsForMonth(year, month);
+    return state.events;
 }
 
 /**
- * Create a new event
+ * Create a new event (saves to localStorage)
  */
 async function createEvent(eventData) {
-    return await api('/api/events', {
-        method: 'POST',
-        body: JSON.stringify(eventData),
-    });
+    // Find the user info for the event
+    const user = state.users.find(u => u.id === eventData.user_id);
+
+    // Create new event with generated ID
+    const newEvent = {
+        id: getNextEventId(),
+        title: eventData.title,
+        date: eventData.date,
+        start_time: eventData.start_time || null,
+        end_time: eventData.end_time || null,
+        user_id: eventData.user_id,
+        user_name: user ? user.name : 'Unknown',
+        user_color: user ? user.color : '#888888',
+        created_at: new Date().toISOString(),
+    };
+
+    // Add to allEvents and save to localStorage
+    state.allEvents.push(newEvent);
+    saveEventsToStorage();
+
+    return newEvent;
 }
 
 /**

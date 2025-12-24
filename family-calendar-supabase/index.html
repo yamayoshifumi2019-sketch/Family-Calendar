@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Calendar</title>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /*
+         * Family Calendar - Styles
+         * =========================
+         */
+
+        /* CSS Variables */
+        :root {
+            --primary-color: #4A90D9;
+            --primary-hover: #3A7BC8;
+            --secondary-color: #6c757d;
+            --danger-color: #D94A4A;
+            --danger-hover: #C43A3A;
+            --background: #f5f7fa;
+            --surface: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --radius: 8px;
+            --radius-sm: 4px;
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* App Container */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            padding: 8px;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 16px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .app-header h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .login-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #user-name-display {
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--background);
+        }
+
+        #user-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        .btn-nav {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-nav:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            line-height: 1;
+        }
+
+        .btn-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 8px;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        /* Calendar Navigation */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--surface);
+            border-radius: var(--radius) var(--radius) 0 0;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .calendar-nav h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Calendar Grid */
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background: var(--surface);
+            border-radius: 0 0 var(--radius) var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: var(--background);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .day-header {
+            padding: 10px 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: 1fr;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            padding: 6px 8px;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .calendar-day:nth-child(7n) {
+            border-right: none;
+        }
+
+        .calendar-day:nth-last-child(-n+7) {
+            border-bottom: none;
+        }
+
+        .calendar-day:hover {
+            background: var(--background);
+        }
+
+        .calendar-day.other-month {
+            background: #fafafa;
+            color: #aaa;
+        }
+
+        .calendar-day.today {
+            background: #fff9e6;
+        }
+
+        .calendar-day.today .day-number {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 20px;
+            margin-bottom: 3px;
+            flex-shrink: 0;
+        }
+
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .event-pill {
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .event-pill:hover {
+            opacity: 0.9;
+        }
+
+        .more-events {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2px;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+        }
+
+        /* Form Styles */
+        #event-form {
+            padding: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Title Suggestions */
+        .title-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .suggestion-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .suggestion-chip:hover .chip-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .chip-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-actions-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Events List (Day Modal) */
+        .events-list {
+            padding: 16px 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            background: var(--background);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .event-item:hover {
+            background: #e8e8e8;
+        }
+
+        .event-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .event-color-bar {
+            width: 4px;
+            min-height: 40px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .event-details {
+            flex: 1;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .event-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .no-events {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+        }
+
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            html, body {
+                overflow: auto;
+            }
+
+            .app-container {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+
+            .app-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 8px 12px;
+                gap: 8px;
+            }
+
+            .app-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .legend {
+                padding: 6px 10px;
+                gap: 10px;
+                justify-content: center;
+            }
+
+            .calendar-nav {
+                padding: 8px 12px;
+            }
+
+            .calendar-day {
+                padding: 4px 5px;
+            }
+
+            .day-number {
+                font-size: 17px;
+            }
+
+            .day-header {
+                font-size: 16px;
+                padding: 6px 4px;
+            }
+
+            .event-pill {
+                font-size: 14px;
+                padding: 4px 6px;
+            }
+
+            .more-events {
+                font-size: 12px;
+            }
+
+            .calendar-nav h2 {
+                font-size: 1.2rem;
+            }
+
+            .btn-nav {
+                padding: 6px 10px;
+                font-size: 15px;
+            }
+
+            .calendar-grid {
+                min-height: 400px;
+            }
+
+            .fab {
+                bottom: 16px;
+                right: 16px;
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 4px;
+                gap: 4px;
+            }
+
+            .app-header {
+                padding: 6px 10px;
+                gap: 6px;
+            }
+
+            .app-header h1 {
+                font-size: 1.2rem;
+            }
+
+            .legend {
+                padding: 4px 8px;
+                gap: 8px;
+            }
+
+            .legend-item {
+                font-size: 12px;
+            }
+
+            .legend-color {
+                width: 10px;
+                height: 10px;
+            }
+
+            .calendar-nav {
+                padding: 6px 10px;
+            }
+
+            .calendar-nav h2 {
+                font-size: 1.1rem;
+            }
+
+            .day-header {
+                padding: 4px 2px;
+                font-size: 13px;
+            }
+
+            .day-number {
+                font-size: 15px;
+            }
+
+            .event-pill {
+                font-size: 12px;
+                padding: 3px 5px;
+            }
+
+            .calendar-grid {
+                min-height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with user info and login -->
+        <header class="app-header">
+            <h1>Family Calendar</h1>
+            <div class="user-section">
+                <!-- Login dropdown (shown when not logged in) -->
+                <div id="login-section" class="login-section">
+                    <select id="user-select">
+                        <option value="">Select Family Member</option>
+                    </select>
+                    <button id="login-btn" class="btn btn-primary">Login</button>
+                </div>
+                <!-- User info (shown when logged in) -->
+                <div id="user-info" class="user-info hidden">
+                    <span id="user-name-display"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content area -->
+        <main class="main-content">
+            <!-- Family member legend -->
+            <div class="legend" id="legend">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Calendar navigation -->
+            <div class="calendar-nav">
+                <button id="prev-month" class="btn btn-nav">&lt; Previous</button>
+                <h2 id="current-month-year"></h2>
+                <button id="next-month" class="btn btn-nav">Next &gt;</button>
+            </div>
+
+            <!-- Calendar grid -->
+            <div class="calendar-container">
+                <!-- Day headers -->
+                <div class="calendar-header">
+                    <div class="day-header">Sun</div>
+                    <div class="day-header">Mon</div>
+                    <div class="day-header">Tue</div>
+                    <div class="day-header">Wed</div>
+                    <div class="day-header">Thu</div>
+                    <div class="day-header">Fri</div>
+                    <div class="day-header">Sat</div>
+                </div>
+                <!-- Calendar days (populated by JavaScript) -->
+                <div class="calendar-grid" id="calendar-grid">
+                    <div class="loading">Loading calendar...</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Add Event Button (floating) -->
+        <button id="add-event-btn" class="fab hidden" title="Add Event">+</button>
+
+        <!-- Event Modal (for adding/editing events) -->
+        <div id="event-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Add Event</h3>
+                    <button id="close-modal" class="btn-close">&times;</button>
+                </div>
+                <form id="event-form">
+                    <input type="hidden" id="event-id">
+
+                    <div class="form-group">
+                        <label for="event-title">Title *</label>
+                        <input type="text" id="event-title" required placeholder="Event title">
+                        <div id="title-suggestions" class="title-suggestions hidden">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event-date">Date *</label>
+                        <input type="date" id="event-date" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-start-time">Start Time (optional)</label>
+                            <input type="time" id="event-start-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-end-time">End Time (optional)</label>
+                            <input type="time" id="event-end-time">
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" id="delete-event-btn" class="btn btn-danger hidden">Delete</button>
+                        <div class="modal-actions-right">
+                            <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Event Details Modal (for viewing events on a day) -->
+        <div id="day-events-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="day-events-title">Events</h3>
+                    <button id="close-day-modal" class="btn-close">&times;</button>
+                </div>
+                <div id="day-events-list" class="events-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+                <div class="modal-actions">
+                    <button id="add-event-day-btn" class="btn btn-primary">Add Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Family Calendar - Supabase Edition
+         * ===================================
+         * A shared family calendar using Supabase as the backend database.
+         * All family members can see and manage events across devices.
+         */
+
+        // ===================
+        // Supabase Configuration
+        // ===================
+        // IMPORTANT: Replace these with your actual Supabase project credentials
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';  // e.g., 'https://xxxxx.supabase.co'
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';  // Your anon/public key
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ===================
+        // Family Members Configuration
+        // ===================
+        // Define your family members here with their colors
+        const FAMILY_MEMBERS = [
+            { id: 1, name: 'King', color: '#4A90D9' },       // Blue
+            { id: 2, name: 'ブー太郎', color: '#D94A4A' },   // Red
+            { id: 3, name: 'Hidetoshi', color: '#4AD97B' },  // Green
+            { id: 4, name: 'Yoshi', color: '#D9A84A' },      // Orange
+        ];
+
+        // ===================
+        // State Management
+        // ===================
+        const state = {
+            currentUser: null,          // Currently logged-in user (from FAMILY_MEMBERS)
+            events: [],                 // Events for current month
+            currentYear: new Date().getFullYear(),
+            currentMonth: new Date().getMonth(),  // 0-indexed
+            selectedDate: null,         // Date selected for new event
+            savedTitles: [],            // Saved titles for suggestions
+        };
+
+        // Month names for display
+        const MONTH_NAMES = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        // localStorage key for persisting logged-in user
+        const STORAGE_KEY_USER = 'family_calendar_user';
+
+        // ===================
+        // DOM Elements
+        // ===================
+        const elements = {
+            loginSection: document.getElementById('login-section'),
+            userInfo: document.getElementById('user-info'),
+            userSelect: document.getElementById('user-select'),
+            loginBtn: document.getElementById('login-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            userNameDisplay: document.getElementById('user-name-display'),
+            calendarGrid: document.getElementById('calendar-grid'),
+            currentMonthYear: document.getElementById('current-month-year'),
+            prevMonthBtn: document.getElementById('prev-month'),
+            nextMonthBtn: document.getElementById('next-month'),
+            legend: document.getElementById('legend'),
+            addEventBtn: document.getElementById('add-event-btn'),
+            eventModal: document.getElementById('event-modal'),
+            modalTitle: document.getElementById('modal-title'),
+            closeModal: document.getElementById('close-modal'),
+            eventForm: document.getElementById('event-form'),
+            eventId: document.getElementById('event-id'),
+            eventTitle: document.getElementById('event-title'),
+            eventDate: document.getElementById('event-date'),
+            eventStartTime: document.getElementById('event-start-time'),
+            eventEndTime: document.getElementById('event-end-time'),
+            titleSuggestions: document.getElementById('title-suggestions'),
+            deleteEventBtn: document.getElementById('delete-event-btn'),
+            cancelBtn: document.getElementById('cancel-btn'),
+            dayEventsModal: document.getElementById('day-events-modal'),
+            dayEventsTitle: document.getElementById('day-events-title'),
+            dayEventsList: document.getElementById('day-events-list'),
+            closeDayModal: document.getElementById('close-day-modal'),
+            addEventDayBtn: document.getElementById('add-event-day-btn'),
+        };
+
+        // ===================
+        // Supabase API Functions
+        // ===================
+
+        /**
+         * Fetch events for a specific month from Supabase
+         */
+        async function fetchEvents(year, month) {
+            const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+            let endDate;
+            if (month === 11) {
+                endDate = `${year + 1}-01-01`;
+            } else {
+                endDate = `${year}-${String(month + 2).padStart(2, '0')}-01`;
+            }
+
+            const { data, error } = await supabase
+                .from('events')
+                .select('*')
+                .gte('date', startDate)
+                .lt('date', endDate)
+                .order('date')
+                .order('start_time');
+
+            if (error) {
+                console.error('Error fetching events:', error);
+                return [];
+            }
+
+            // Add user color info to each event
+            state.events = data.map(event => ({
+                ...event,
+                user_color: getUserColor(event.created_by)
+            }));
+
+            return state.events;
+        }
+
+        /**
+         * Create a new event in Supabase
+         */
+        async function createEvent(eventData) {
+            const { data, error } = await supabase
+                .from('events')
+                .insert([{
+                    title: eventData.title,
+                    date: eventData.date,
+                    start_time: eventData.start_time || null,
+                    end_time: eventData.end_time || null,
+                    created_by: eventData.created_by,
+                }])
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creating event:', error);
+                throw new Error('Failed to create event');
+            }
+
+            return {
+                ...data,
+                user_color: getUserColor(data.created_by)
+            };
+        }
+
+        /**
+         * Update an existing event in Supabase
+         */
+        async function updateEvent(eventId, eventData) {
+            const { data, error } = await supabase
+                .from('events')
+                .update({
+                    title: eventData.title,
+                    date: eventData.date,
+                    start_time: eventData.start_time || null,
+                    end_time: eventData.end_time || null,
+                })
+                .eq('id', eventId)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error updating event:', error);
+                throw new Error('Failed to update event');
+            }
+
+            return {
+                ...data,
+                user_color: getUserColor(data.created_by)
+            };
+        }
+
+        /**
+         * Delete an event from Supabase
+         */
+        async function deleteEvent(eventId) {
+            const { error } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', eventId);
+
+            if (error) {
+                console.error('Error deleting event:', error);
+                throw new Error('Failed to delete event');
+            }
+        }
+
+        /**
+         * Fetch distinct titles for the current user (for suggestions)
+         */
+        async function fetchSavedTitles() {
+            if (!state.currentUser) {
+                state.savedTitles = [];
+                return [];
+            }
+
+            const { data, error } = await supabase
+                .from('events')
+                .select('title, created_at')
+                .eq('created_by', state.currentUser.name)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching saved titles:', error);
+                state.savedTitles = [];
+                return [];
+            }
+
+            // Get unique titles
+            const seen = new Set();
+            state.savedTitles = data
+                .filter(item => {
+                    if (seen.has(item.title)) return false;
+                    seen.add(item.title);
+                    return true;
+                })
+                .slice(0, 10)
+                .map(item => item.title);
+
+            return state.savedTitles;
+        }
+
+        // ===================
+        // Helper Functions
+        // ===================
+
+        /**
+         * Get color for a user by name
+         */
+        function getUserColor(userName) {
+            const user = FAMILY_MEMBERS.find(u => u.name === userName);
+            return user ? user.color : '#888888';
+        }
+
+        /**
+         * Save current user to localStorage
+         */
+        function saveUserToStorage() {
+            if (state.currentUser) {
+                localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(state.currentUser));
+            } else {
+                localStorage.removeItem(STORAGE_KEY_USER);
+            }
+        }
+
+        /**
+         * Load current user from localStorage
+         */
+        function loadUserFromStorage() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY_USER);
+                if (data) {
+                    const user = JSON.parse(data);
+                    // Verify user still exists in FAMILY_MEMBERS
+                    return FAMILY_MEMBERS.find(u => u.id === user.id) || null;
+                }
+            } catch (error) {
+                console.error('Error loading user from storage:', error);
+            }
+            return null;
+        }
+
+        // ===================
+        // UI Rendering
+        // ===================
+
+        /**
+         * Update the login/user display based on state
+         */
+        function renderUserSection() {
+            if (state.currentUser) {
+                elements.loginSection.classList.add('hidden');
+                elements.userInfo.classList.remove('hidden');
+                elements.addEventBtn.classList.remove('hidden');
+                elements.userNameDisplay.textContent = state.currentUser.name;
+                elements.userNameDisplay.style.borderLeft = `4px solid ${state.currentUser.color}`;
+            } else {
+                elements.loginSection.classList.remove('hidden');
+                elements.userInfo.classList.add('hidden');
+                elements.addEventBtn.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Populate the user select dropdown
+         */
+        function renderUserSelect() {
+            elements.userSelect.innerHTML = '<option value="">Select Family Member</option>';
+            FAMILY_MEMBERS.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                elements.userSelect.appendChild(option);
+            });
+        }
+
+        /**
+         * Render the family member legend
+         */
+        function renderLegend() {
+            elements.legend.innerHTML = '';
+            FAMILY_MEMBERS.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <span class="legend-color" style="background-color: ${user.color}"></span>
+                    <span>${user.name}</span>
+                `;
+                elements.legend.appendChild(item);
+            });
+        }
+
+        /**
+         * Render title suggestions for the event form
+         */
+        function renderTitleSuggestions() {
+            elements.titleSuggestions.innerHTML = '';
+
+            if (state.savedTitles.length === 0) {
+                elements.titleSuggestions.classList.add('hidden');
+                return;
+            }
+
+            state.savedTitles.forEach(title => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'suggestion-chip';
+                chip.innerHTML = `${escapeHtml(title)} <span class="chip-label">前回使用済み</span>`;
+                chip.addEventListener('click', () => {
+                    elements.eventTitle.value = title;
+                    elements.titleSuggestions.classList.add('hidden');
+                });
+                elements.titleSuggestions.appendChild(chip);
+            });
+
+            elements.titleSuggestions.classList.remove('hidden');
+        }
+
+        /**
+         * Get the number of days in a month
+         */
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+
+        /**
+         * Get the day of week for the first day of the month (0 = Sunday)
+         */
+        function getFirstDayOfMonth(year, month) {
+            return new Date(year, month, 1).getDay();
+        }
+
+        /**
+         * Format a date as YYYY-MM-DD
+         */
+        function formatDate(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        /**
+         * Format time for display (12-hour format)
+         */
+        function formatTime(time) {
+            if (!time) return '';
+            const [hours, minutes] = time.split(':');
+            const h = parseInt(hours);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour12 = h % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+
+        /**
+         * Check if a date is today
+         */
+        function isToday(year, month, day) {
+            const today = new Date();
+            return today.getFullYear() === year &&
+                   today.getMonth() === month &&
+                   today.getDate() === day;
+        }
+
+        /**
+         * Get events for a specific date
+         */
+        function getEventsForDate(dateStr) {
+            return state.events.filter(event => event.date === dateStr);
+        }
+
+        /**
+         * Render the calendar grid
+         */
+        function renderCalendar() {
+            elements.currentMonthYear.textContent =
+                `${MONTH_NAMES[state.currentMonth]} ${state.currentYear}`;
+
+            elements.calendarGrid.innerHTML = '';
+
+            const daysInMonth = getDaysInMonth(state.currentYear, state.currentMonth);
+            const firstDay = getFirstDayOfMonth(state.currentYear, state.currentMonth);
+
+            // Previous month days
+            const prevMonth = state.currentMonth === 0 ? 11 : state.currentMonth - 1;
+            const prevYear = state.currentMonth === 0 ? state.currentYear - 1 : state.currentYear;
+            const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
+
+            // Add previous month's trailing days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayEl = createDayElement(prevYear, prevMonth, day, true);
+                elements.calendarGrid.appendChild(dayEl);
+            }
+
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = createDayElement(state.currentYear, state.currentMonth, day, false);
+                elements.calendarGrid.appendChild(dayEl);
+            }
+
+            // Add next month's leading days
+            const totalCells = elements.calendarGrid.children.length;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            const nextMonth = state.currentMonth === 11 ? 0 : state.currentMonth + 1;
+            const nextYear = state.currentMonth === 11 ? state.currentYear + 1 : state.currentYear;
+
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = createDayElement(nextYear, nextMonth, day, true);
+                elements.calendarGrid.appendChild(dayEl);
+            }
+        }
+
+        /**
+         * Create a day element for the calendar
+         */
+        function createDayElement(year, month, day, isOtherMonth) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+
+            if (isOtherMonth) {
+                dayEl.classList.add('other-month');
+            }
+
+            if (isToday(year, month, day)) {
+                dayEl.classList.add('today');
+            }
+
+            const dateStr = formatDate(year, month, day);
+            dayEl.dataset.date = dateStr;
+
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayEl.appendChild(dayNumber);
+
+            // Events for this day
+            const dayEvents = getEventsForDate(dateStr);
+            if (dayEvents.length > 0) {
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'day-events';
+
+                const maxDisplay = 3;
+                dayEvents.slice(0, maxDisplay).forEach(event => {
+                    const pill = document.createElement('div');
+                    pill.className = 'event-pill';
+                    pill.style.backgroundColor = event.user_color;
+
+                    let displayText = '';
+                    if (event.start_time && event.end_time) {
+                        displayText = `${formatTime(event.start_time)} – ${formatTime(event.end_time)} ${event.title}`;
+                    } else if (event.start_time) {
+                        displayText = `${formatTime(event.start_time)} ${event.title}`;
+                    } else {
+                        displayText = event.title;
+                    }
+                    pill.textContent = displayText;
+                    pill.title = `${event.title} (${event.created_by})`;
+                    eventsContainer.appendChild(pill);
+                });
+
+                if (dayEvents.length > maxDisplay) {
+                    const more = document.createElement('div');
+                    more.className = 'more-events';
+                    more.textContent = `+${dayEvents.length - maxDisplay} more`;
+                    eventsContainer.appendChild(more);
+                }
+
+                dayEl.appendChild(eventsContainer);
+            }
+
+            dayEl.addEventListener('click', () => handleDayClick(dateStr, dayEvents));
+
+            return dayEl;
+        }
+
+        /**
+         * Handle clicking on a day
+         */
+        function handleDayClick(dateStr, events) {
+            state.selectedDate = dateStr;
+
+            if (events.length > 0) {
+                showDayEventsModal(dateStr, events);
+            } else if (state.currentUser) {
+                openEventModal(null, dateStr);
+            } else {
+                alert('Please log in to add events.');
+            }
+        }
+
+        /**
+         * Show modal with events for a specific day
+         */
+        function showDayEventsModal(dateStr, events) {
+            const date = new Date(dateStr + 'T00:00:00');
+            elements.dayEventsTitle.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            elements.dayEventsList.innerHTML = '';
+
+            if (events.length === 0) {
+                elements.dayEventsList.innerHTML = '<p class="no-events">No events this day</p>';
+            } else {
+                events.forEach(event => {
+                    const item = document.createElement('div');
+                    item.className = 'event-item';
+
+                    let timeDisplay = '';
+                    if (event.start_time && event.end_time) {
+                        timeDisplay = `${formatTime(event.start_time)} – ${formatTime(event.end_time)}`;
+                    } else if (event.start_time) {
+                        timeDisplay = formatTime(event.start_time);
+                    }
+
+                    // Check if current user can edit this event
+                    const canEdit = state.currentUser && state.currentUser.name === event.created_by;
+
+                    item.innerHTML = `
+                        <div class="event-color-bar" style="background-color: ${event.user_color}"></div>
+                        <div class="event-details">
+                            <div class="event-title">${escapeHtml(event.title)}</div>
+                            <div class="event-meta">
+                                ${timeDisplay ? timeDisplay + ' • ' : ''}${escapeHtml(event.created_by)}
+                            </div>
+                        </div>
+                    `;
+
+                    if (canEdit) {
+                        item.style.cursor = 'pointer';
+                        item.addEventListener('click', () => {
+                            closeDayEventsModal();
+                            openEventModal(event);
+                        });
+                    } else {
+                        item.style.cursor = 'default';
+                    }
+                    elements.dayEventsList.appendChild(item);
+                });
+            }
+
+            if (state.currentUser) {
+                elements.addEventDayBtn.classList.remove('hidden');
+            } else {
+                elements.addEventDayBtn.classList.add('hidden');
+            }
+
+            elements.dayEventsModal.classList.remove('hidden');
+        }
+
+        /**
+         * Close day events modal
+         */
+        function closeDayEventsModal() {
+            elements.dayEventsModal.classList.add('hidden');
+        }
+
+        /**
+         * Open event modal for adding or editing
+         */
+        async function openEventModal(event = null, date = null) {
+            if (!state.currentUser) {
+                alert('Please log in to add or edit events.');
+                return;
+            }
+
+            elements.eventForm.reset();
+            elements.eventId.value = '';
+
+            if (event) {
+                // Edit mode
+                elements.modalTitle.textContent = 'Edit Event';
+                elements.eventId.value = event.id;
+                elements.eventTitle.value = event.title;
+                elements.eventDate.value = event.date;
+                elements.eventStartTime.value = event.start_time || '';
+                elements.eventEndTime.value = event.end_time || '';
+                elements.deleteEventBtn.classList.remove('hidden');
+                elements.titleSuggestions.classList.add('hidden');
+            } else {
+                // Add mode
+                elements.modalTitle.textContent = 'Add Event';
+                elements.eventDate.value = date || formatDate(
+                    state.currentYear,
+                    state.currentMonth,
+                    new Date().getDate()
+                );
+                elements.deleteEventBtn.classList.add('hidden');
+                await fetchSavedTitles();
+                renderTitleSuggestions();
+            }
+
+            elements.eventModal.classList.remove('hidden');
+            elements.eventTitle.focus();
+        }
+
+        /**
+         * Close event modal
+         */
+        function closeEventModal() {
+            elements.eventModal.classList.add('hidden');
+        }
+
+        /**
+         * Handle event form submission
+         */
+        async function handleEventSubmit(e) {
+            e.preventDefault();
+
+            const eventData = {
+                title: elements.eventTitle.value.trim(),
+                date: elements.eventDate.value,
+                start_time: elements.eventStartTime.value || null,
+                end_time: elements.eventEndTime.value || null,
+                created_by: state.currentUser.name,
+            };
+
+            try {
+                const eventId = elements.eventId.value;
+
+                if (eventId) {
+                    await updateEvent(eventId, eventData);
+                } else {
+                    await createEvent(eventData);
+                }
+
+                await refreshCalendar();
+                closeEventModal();
+            } catch (error) {
+                alert('Error saving event: ' + error.message);
+            }
+        }
+
+        /**
+         * Handle event deletion
+         */
+        async function handleEventDelete() {
+            const eventId = elements.eventId.value;
+            if (!eventId) return;
+
+            if (!confirm('Are you sure you want to delete this event?')) {
+                return;
+            }
+
+            try {
+                await deleteEvent(eventId);
+                await refreshCalendar();
+                closeEventModal();
+            } catch (error) {
+                alert('Error deleting event: ' + error.message);
+            }
+        }
+
+        /**
+         * Navigate to previous month
+         */
+        function goToPrevMonth() {
+            if (state.currentMonth === 0) {
+                state.currentMonth = 11;
+                state.currentYear--;
+            } else {
+                state.currentMonth--;
+            }
+            refreshCalendar();
+        }
+
+        /**
+         * Navigate to next month
+         */
+        function goToNextMonth() {
+            if (state.currentMonth === 11) {
+                state.currentMonth = 0;
+                state.currentYear++;
+            } else {
+                state.currentMonth++;
+            }
+            refreshCalendar();
+        }
+
+        /**
+         * Refresh calendar with new events from Supabase
+         */
+        async function refreshCalendar() {
+            await fetchEvents(state.currentYear, state.currentMonth);
+            renderCalendar();
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ===================
+        // Event Listeners
+        // ===================
+
+        function setupEventListeners() {
+            // Login button
+            elements.loginBtn.addEventListener('click', () => {
+                const userId = parseInt(elements.userSelect.value);
+                if (!userId) {
+                    alert('Please select a family member');
+                    return;
+                }
+
+                state.currentUser = FAMILY_MEMBERS.find(u => u.id === userId);
+                saveUserToStorage();
+                renderUserSection();
+            });
+
+            // Logout button
+            elements.logoutBtn.addEventListener('click', () => {
+                state.currentUser = null;
+                state.savedTitles = [];
+                saveUserToStorage();
+                renderUserSection();
+            });
+
+            // Month navigation
+            elements.prevMonthBtn.addEventListener('click', goToPrevMonth);
+            elements.nextMonthBtn.addEventListener('click', goToNextMonth);
+
+            // Add event button (floating)
+            elements.addEventBtn.addEventListener('click', () => {
+                openEventModal(null, formatDate(
+                    state.currentYear,
+                    state.currentMonth,
+                    new Date().getDate()
+                ));
+            });
+
+            // Event modal
+            elements.closeModal.addEventListener('click', closeEventModal);
+            elements.cancelBtn.addEventListener('click', closeEventModal);
+            elements.eventForm.addEventListener('submit', handleEventSubmit);
+            elements.deleteEventBtn.addEventListener('click', handleEventDelete);
+
+            // Day events modal
+            elements.closeDayModal.addEventListener('click', closeDayEventsModal);
+            elements.addEventDayBtn.addEventListener('click', () => {
+                closeDayEventsModal();
+                openEventModal(null, state.selectedDate);
+            });
+
+            // Close modals on outside click
+            elements.eventModal.addEventListener('click', (e) => {
+                if (e.target === elements.eventModal) {
+                    closeEventModal();
+                }
+            });
+
+            elements.dayEventsModal.addEventListener('click', (e) => {
+                if (e.target === elements.dayEventsModal) {
+                    closeDayEventsModal();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeEventModal();
+                    closeDayEventsModal();
+                }
+            });
+        }
+
+        // ===================
+        // Initialization
+        // ===================
+
+        async function init() {
+            try {
+                // Check if Supabase is configured
+                if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                    elements.calendarGrid.innerHTML = `
+                        <div class="loading" style="grid-column: 1 / -1; padding: 40px;">
+                            <h3>Setup Required</h3>
+                            <p style="margin-top: 10px;">Please configure Supabase credentials in the script.</p>
+                            <p style="margin-top: 5px;">See SETUP.md for instructions.</p>
+                        </div>
+                    `;
+                    renderUserSelect();
+                    renderLegend();
+                    return;
+                }
+
+                // Load saved user from localStorage
+                state.currentUser = loadUserFromStorage();
+
+                // Render UI
+                renderUserSelect();
+                renderLegend();
+                renderUserSection();
+
+                // Fetch events and render calendar
+                await refreshCalendar();
+
+                // Setup event listeners
+                setupEventListeners();
+
+                console.log('Family Calendar initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                elements.calendarGrid.innerHTML = `
+                    <div class="loading" style="grid-column: 1 / -1;">
+                        Failed to load calendar. Please check your Supabase configuration.
+                    </div>
+                `;
+            }
+        }
+
+        // Start the app when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
