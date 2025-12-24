@@ -668,7 +668,7 @@
             }
 
             .day-number {
-                font-size: 0.45rem;
+                font-size: 0.55rem;
                 font-weight: 500;
                 margin-bottom: 0;
                 line-height: 1;
@@ -684,18 +684,24 @@
             }
 
             .event-item {
-                font-size: 0.4rem;
+                font-size: 0.5rem;
                 padding: 1px 2px;
                 border-radius: 2px;
-                line-height: 1.1;
+                line-height: 1.15;
             }
 
             .event-title {
-                max-width: 100%;
+                max-width: none;
+                flex-shrink: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .event-time {
-                display: none;
+                display: inline;
+                font-size: 0.4rem;
+                opacity: 0.85;
+                flex-shrink: 0;
             }
 
             /* Floating Add Button */
@@ -804,12 +810,16 @@
             }
 
             .day-number {
-                font-size: 0.4rem;
+                font-size: 0.5rem;
             }
 
             .event-item {
-                font-size: 0.35rem;
+                font-size: 0.45rem;
                 padding: 0 1px;
+            }
+
+            .event-time {
+                font-size: 0.35rem;
             }
 
             .add-event-btn {
