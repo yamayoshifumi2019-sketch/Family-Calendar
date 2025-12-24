@@ -836,8 +836,8 @@
         const SUPABASE_URL = 'YOUR_SUPABASE_URL';  // e.g., 'https://xxxxx.supabase.co'
         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';  // Your anon/public key
 
-        // Initialize Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase client - initialized later in init()
+        let supabase = null;
 
         // ===================
         // Family Members Configuration
@@ -914,6 +914,8 @@
          * Fetch events for a specific month from Supabase
          */
         async function fetchEvents(year, month) {
+            console.log(`[Calendar] Fetching events for ${year}-${month + 1}...`);
+
             const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             let endDate;
             if (month === 11) {
@@ -922,26 +924,34 @@
                 endDate = `${year}-${String(month + 2).padStart(2, '0')}-01`;
             }
 
-            const { data, error } = await supabase
-                .from('events')
-                .select('*')
-                .gte('date', startDate)
-                .lt('date', endDate)
-                .order('date')
-                .order('start_time');
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('*')
+                    .gte('date', startDate)
+                    .lt('date', endDate)
+                    .order('date')
+                    .order('start_time');
 
-            if (error) {
-                console.error('Error fetching events:', error);
+                if (error) {
+                    console.error('[Calendar] Supabase query error:', error);
+                    throw new Error(error.message || 'Failed to fetch events');
+                }
+
+                console.log(`[Calendar] Fetched ${data.length} events`);
+
+                // Add user color info to each event
+                state.events = data.map(event => ({
+                    ...event,
+                    user_color: getUserColor(event.created_by)
+                }));
+
+                return state.events;
+            } catch (fetchError) {
+                console.error('[Calendar] fetchEvents failed:', fetchError);
+                state.events = [];
                 return [];
             }
-
-            // Add user color info to each event
-            state.events = data.map(event => ({
-                ...event,
-                user_color: getUserColor(event.created_by)
-            }));
-
-            return state.events;
         }
 
         /**
@@ -1623,9 +1633,27 @@
         // ===================
 
         async function init() {
+            console.log('[Calendar] Initializing...');
+
             try {
-                // Check if Supabase is configured
+                // Step 1: Check if Supabase library is loaded
+                console.log('[Calendar] Checking Supabase library...');
+                if (typeof window.supabase === 'undefined') {
+                    console.error('[Calendar] Supabase library not loaded!');
+                    elements.calendarGrid.innerHTML = `
+                        <div class="loading" style="grid-column: 1 / -1; padding: 40px;">
+                            <h3>Error: Supabase library not loaded</h3>
+                            <p style="margin-top: 10px;">Please check your internet connection and refresh.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                console.log('[Calendar] Supabase library loaded OK');
+
+                // Step 2: Check if Supabase credentials are configured
+                console.log('[Calendar] Checking Supabase credentials...');
                 if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+                    console.warn('[Calendar] Supabase credentials not configured');
                     elements.calendarGrid.innerHTML = `
                         <div class="loading" style="grid-column: 1 / -1; padding: 40px;">
                             <h3>Setup Required</h3>
@@ -1637,27 +1665,52 @@
                     renderLegend();
                     return;
                 }
+                console.log('[Calendar] Supabase credentials configured OK');
 
-                // Load saved user from localStorage
+                // Step 3: Initialize Supabase client
+                console.log('[Calendar] Initializing Supabase client...');
+                try {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('[Calendar] Supabase client created OK');
+                } catch (clientError) {
+                    console.error('[Calendar] Failed to create Supabase client:', clientError);
+                    elements.calendarGrid.innerHTML = `
+                        <div class="loading" style="grid-column: 1 / -1; padding: 40px;">
+                            <h3>Error: Failed to connect to Supabase</h3>
+                            <p style="margin-top: 10px;">Please check your Supabase URL and key.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Step 4: Load saved user from localStorage
+                console.log('[Calendar] Loading saved user...');
                 state.currentUser = loadUserFromStorage();
+                console.log('[Calendar] Current user:', state.currentUser ? state.currentUser.name : 'None');
 
-                // Render UI
+                // Step 5: Render UI components
+                console.log('[Calendar] Rendering UI...');
                 renderUserSelect();
                 renderLegend();
                 renderUserSection();
 
-                // Fetch events and render calendar
+                // Step 6: Fetch events and render calendar
+                console.log('[Calendar] Fetching events...');
                 await refreshCalendar();
+                console.log('[Calendar] Calendar rendered OK');
 
-                // Setup event listeners
+                // Step 7: Setup event listeners
+                console.log('[Calendar] Setting up event listeners...');
                 setupEventListeners();
 
-                console.log('Family Calendar initialized successfully');
+                console.log('[Calendar] Initialization complete!');
             } catch (error) {
-                console.error('Failed to initialize:', error);
+                console.error('[Calendar] Failed to initialize:', error);
                 elements.calendarGrid.innerHTML = `
-                    <div class="loading" style="grid-column: 1 / -1;">
-                        Failed to load calendar. Please check your Supabase configuration.
+                    <div class="loading" style="grid-column: 1 / -1; padding: 40px;">
+                        <h3>Failed to load calendar</h3>
+                        <p style="margin-top: 10px;">Error: ${escapeHtml(error.message)}</p>
+                        <p style="margin-top: 5px;">Please check console for details.</p>
                     </div>
                 `;
             }
